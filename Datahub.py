@@ -1,0 +1,28 @@
+temp_all_exercises = {
+    1:{"ID" : 1,
+     "Title":"Some ex1",
+     "Creation_date" : "11.07.2023",
+     "Modification_Date" : "11.07.2023",
+     "Content":"It's a content of this exercise",
+     "Solution":"This is a solution!",
+     "Author":"ML",
+     "Categories":["arrays","loops"]},
+    2:{"ID": 2,
+     "Title":"Some ex2 name",
+     "Creation_date": "11.07.2023",
+     "Modification_Date": "11.07.2023",
+     "Content": "2 - It's a content of this exercise",
+     "Solution": "2 - This is a solution!",
+     "Author": "ML",
+     "Categories": ["arrays", "objects"]
+     },
+    3:{"ID": 3,
+     "Title":"Some ex3name",
+     "Creation_date": "11.07.2023",
+     "Modification_Date": "11.07.2023",
+     "Content": "3 - It's a content of this exercise",
+     "Solution": "3 - This is a solution!",
+     "Author": "ML",
+     "Categories": ["arrays", "loops"]
+     }
+}
