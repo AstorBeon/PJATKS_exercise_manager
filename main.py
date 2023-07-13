@@ -89,9 +89,9 @@ elif st.session_state["step"]=="all_records":
     )
     with st.sidebar:
 
-        search_id_input = st.number_input("Exercise ID:")
+        search_id_input = st.number_input("Exercise ID:",step=1,format="%d")
 
-        search_contents = st.text_input("Contents of exercise")
+
         all_search_checkboxes = []
         for cat in all_exercise_categories:
             temp_search_checkbox = st.checkbox(cat)
@@ -110,12 +110,66 @@ elif st.session_state["step"]=="all_records":
     #
     # st.dataframe(exercises_df)
 
+    #todo add filters
 
+    filtered_temp_all_exercises = temp_all_exercises
+    to_drop_ids_general=[]
+    to_drop_ids_idnum = []
+    if search_id_input != 0:
+        print("Filtering")
+        try:
+            #filtered_temp_all_exercises={search_id_input:temp_all_exercises[search_id_input]}
+            to_drop_ids_idnum = list(filtered_temp_all_exercises.keys())
+            to_drop_ids_idnum.remove(search_id_input)
+            print("Filtered")
+        except:
+            pass
+    else:
+        to_drop_ids=[]
+
+
+    #filtering by checkboxes
+    choosen_cats = []
+    to_drop_ids_cats = []
+    if any(all_search_checkboxes):
+        for check, num in zip(all_search_checkboxes,range(len(all_search_checkboxes))):
+            if check:
+                choosen_cats.append(all_exercise_categories[num])
+
+        for key,val in filtered_temp_all_exercises.items():
+            if not all([x in val["Categories"] for x in choosen_cats]):
+                to_drop_ids_cats.append(key)
+
+        # for todrop_id in to_drop_ids:
+        #     del filtered_temp_all_exercises[todrop_id]
+
+        print(f"Choosen: {choosen_cats}")
+
+    else:
+        to_drop_ids_cats=[]
+
+    to_drop_ids_author=[]
+    if search_author != "":
+        for key,val in filtered_temp_all_exercises.items():
+            if val["Author"] != search_author:
+                to_drop_ids_author.append(key)
+    else:
+        to_drop_ids_author=[]
+
+
+    to_drop_ids_general = []
+    to_drop_ids_general.extend(to_drop_ids_cats)
+    to_drop_ids_general.extend(to_drop_ids_idnum)
+    to_drop_ids_general.extend(to_drop_ids_author)
 
     ex_col1, ex_col2,ex_col3 = st.columns(3)
-    for key,ex in temp_all_exercises.items():
+    for key,ex in filtered_temp_all_exercises.items():
         st.text(" ")
-
+        if len(to_drop_ids_general)==len(filtered_temp_all_exercises):
+            st.warning("No records match your criteria")
+            break
+        if key in to_drop_ids_general:
+            continue
         with ex_col1:
             ex_col_1_1,ex_col_1_2 = st.columns(2)
             with ex_col_1_1:
