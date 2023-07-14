@@ -1,3 +1,4 @@
+import datetime
 import random
 import uuid
 from Datahub import temp_all_exercises
@@ -59,7 +60,8 @@ if st.session_state["step"]=="logged":
 
         add_new_ex_btn = st.button("Add new exercise")
         if add_new_ex_btn:
-            up_step("add_new")
+            up_step("add_exercise")
+            st.experimental_rerun()
 
         add_new_ex_btn = st.button("Generate new pack")
         if add_new_ex_btn:
@@ -99,7 +101,11 @@ elif st.session_state["step"]=="all_records":
 
         search_author = st.text_input("Author:")
 
-    st.subheader("List of all exercises")
+    list_all_col1, list_all_col2 = st.columns(2)
+    with list_all_col1:
+        st.button("Go back",on_click=up_step,args=["logged"])
+    with list_all_col2:
+        st.subheader("List of all exercises")
     # exercises_df = {
     #     "Id" :[x["ID"] for x in temp_all_exercises],
     #     "Titles":[x["Title"] for x in temp_all_exercises],
@@ -212,7 +218,87 @@ elif "show_ex" in st.session_state["step"]:
 elif "edit_ex" in st.session_state["step"]:
     show_exercise(temp_all_exercises[int(st.session_state["step"].split("_")[-1])],True)
     #show_exercise([x for x in temp_all_exercises.values() if str(x["ID"])==st.session_state["step"].split("_")[2]][0])
+elif st.session_state["step"]=="add_exercise":
+    add_col1,add_col2,dum_col = st.columns(3)
+    with add_col1:
+        st.button("Go back",on_click=up_step,args=["logged"],key=uuid.uuid4())
+    with add_col2:
+        st.subheader("     Add new exercise")
 
+    st.markdown("<br>",unsafe_allow_html=True)
+
+    add_ex_col1,add_ex_col2 = st.columns(2)
+
+
+    with add_ex_col1:
+        exercise_title = st.text_input("Exercise name:","Generic name")
+    with add_ex_col2:
+        exercise_author = st.text_input("Author:",st.session_state["logged"][:2])
+
+    exercise_content = st.text_area("Content of exercise goes here")
+    exercise_answer = st.text_area("Answer of exercise goes here")
+    st.text("Categories")
+    categories_list = []
+
+    categories_list=st.columns(len(all_exercise_categories))
+    if "add_exercise_checkboxes" not in st.session_state:
+        print("Reset stats")
+        st.session_state["add_exercise_checkboxes"] = []
+        st.session_state["add_exercise_checkboxes_bools"] = []
+    for i in range(len(all_exercise_categories)):
+        with categories_list[i]:
+            #print(len(st.session_state["add_exercise_checkboxes"]))
+
+            def update_checkbox_state(index_bool):
+                st.session_state["add_exercise_checkboxes_bools"][index_bool] = not st.session_state["add_exercise_checkboxes_bools"][index_bool]
+
+            fresh_bool_value = False
+            if len(st.session_state["add_exercise_checkboxes_bools"]) == len(all_exercise_categories):
+                fresh_bool_value=st.session_state["add_exercise_checkboxes_bools"][i]
+
+            checkbtn = st.checkbox(all_exercise_categories[i],key=uuid.uuid4(),on_change=update_checkbox_state,args=[i],
+                                   value=fresh_bool_value)
+
+
+
+
+            if len(st.session_state["add_exercise_checkboxes_bools"]) != len(all_exercise_categories):
+                st.session_state["add_exercise_checkboxes"].append(checkbtn)
+                st.session_state["add_exercise_checkboxes_bools"].append(False)
+            # if checkbtn:
+            #     print(f"PRE {st.session_state['add_exercise_checkboxes_bools']} ")
+            #     #st.session_state["add_exercise_checkboxes_bools"][i]=not st.session_state["add_exercise_checkboxes_bools"][i]
+            #     print(f"POST {st.session_state['add_exercise_checkboxes_bools']} ")
+            #     print(f"Changed state for {i}")
+            #     print(st.session_state["add_exercise_checkboxes_bools"])
+
+
+
+
+    st.warning("Functionality not tested implemented")
+    creation_date = datetime.datetime.now().strftime("%d-%m-%Y")
+    modification_date = creation_date
+
+
+    def add_new_exercise():
+        temp_id = max(temp_all_exercises.keys())+1
+        temp_categories=[all_exercise_categories[x] for x in range(len(all_exercise_categories)) if st.session_state["add_exercise_checkboxes_bools"][x]]
+        all_exercise_categories[temp_id]={"ID" : temp_id,
+     "Title":exercise_title,
+     "Creation_date" : creation_date,
+     "Modification_Date" : modification_date,
+     "Content":exercise_content,
+     "Solution":exercise_answer,
+     "Author":exercise_author,
+     "Categories":temp_categories
+                                          }
+
+
+        st.session_state["add_exercise_checkboxes"]=[]
+        st.session_state["add_exercise_checkboxes_bools"] = []
+
+        #todo add information about saving and thats all.
+    st.button("Save",on_click=add_new_exercise,args=[], key=uuid.uuid4())
     #todo here
             # with ex_col_3_1:
             #
