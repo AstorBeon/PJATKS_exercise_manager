@@ -1,5 +1,6 @@
 import datetime
 import random
+import time
 import uuid
 from Datahub import temp_all_exercises
 from Views import show_exercise
@@ -23,7 +24,7 @@ if "step" not in st.session_state:
     st.session_state["step"] = "main"
 #Logging
 
-if st.session_state["logged"]=="":
+if "logged" not in st.session_state or st.session_state["logged"]=="":
 
     def login_action():
         if login =="" and password=="":
@@ -66,6 +67,7 @@ if st.session_state["step"]=="logged":
         add_new_ex_btn = st.button("Generate new pack")
         if add_new_ex_btn:
             up_step("generate_pack")
+            st.experimental_rerun()
 
 elif st.session_state["step"]=="all_records":
 
@@ -297,12 +299,75 @@ elif st.session_state["step"]=="add_exercise":
         st.session_state["add_exercise_checkboxes"]=[]
         st.session_state["add_exercise_checkboxes_bools"] = []
 
+        def up_content():
+            #main.temp_all_exercises[ex["ID"]]["Content"] = mod_content
+            #st.session_state["update_exercise"] = (ex["ID"],mod_content)
+            with st.spinner('Wait for it...'):
+                time.sleep(1)
+            st.success('Done!')
+            time.sleep(1)
+            up_step("logged")
         #todo add information about saving and thats all.
+        up_content()
     st.button("Save",on_click=add_new_exercise,args=[], key=uuid.uuid4())
-    #todo here
+
             # with ex_col_3_1:
             #
             #     a = st.button(f"Show{random.randint(0,100)}")
             # with ex_col_3_2:
             #     b = st.button(f"Answer{random.randint(0,100)}")
 
+elif st.session_state["step"] =="generate_pack":
+
+    print("gnerate_pack")
+    add_col1, add_col2, dum_col = st.columns(3)
+    with add_col1:
+        st.button("Go back", on_click=up_step, args=["logged"], key=uuid.uuid4())
+    with add_col2:
+        st.subheader("     Generate exercise pack")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    gen_col1,gen_col2 = st.columns(2)
+    with gen_col1:
+        pack_name = st.text_input("Name/Title of the pack","ex. GUI_XII")
+    with gen_col2:
+        amount_of_exercises = st.number_input("Number of exercises",step=1,max_value=8)
+
+    if "add_exercise_checkboxes" not in st.session_state:
+
+        st.session_state["add_exercise_checkboxes"] = []
+        st.session_state["add_exercise_checkboxes_bools"] = []
+
+    categories_list = st.columns(len(all_exercise_categories))
+    for i in range(len(all_exercise_categories)):
+        with categories_list[i]:
+            #print(len(st.session_state["add_exercise_checkboxes"]))
+
+            def update_checkbox_state(index_bool):
+                st.session_state["add_exercise_checkboxes_bools"][index_bool] = not st.session_state["add_exercise_checkboxes_bools"][index_bool]
+
+            fresh_bool_value = False
+            if len(st.session_state["gen_exercise_checkboxes_bools"]) == len(all_exercise_categories):
+                fresh_bool_value=st.session_state["gen_exercise_checkboxes_bools"][i]
+
+            checkbtn = st.checkbox(all_exercise_categories[i],key=uuid.uuid4(),on_change=update_checkbox_state,args=[i],
+                                   value=fresh_bool_value)
+
+            if len(st.session_state["gen_exercise_checkboxes_bools"]) != len(all_exercise_categories):
+                st.session_state["gen_exercise_checkboxes"].append(checkbtn)
+                st.session_state["gen_exercise_checkboxes_bools"].append(False)
+
+    def generate_pack():
+        temp_generated_exercises = temp_all_exercises
+        random.shuffle(temp_generated_exercises)
+        selected_categories =[]
+        print(st.session_state["add_exer"])
+        filter(lambda ex: all([sub_x in selected_categories for sub_x in ex["Categories"]]),temp_generated_exercises)
+
+        #todo add filtering
+        #todo select a number of exs
+        #warning if not enough exercises
+        pass
+
+    st.button("Generate!",key=uuid.uuid4(),on_click=generate_pack,args=[])
