@@ -10,6 +10,7 @@ st.set_page_config(page_title=f"Exercise generator",layout="wide")#, page_icon =
 
 temp_login_data={"admin":"admin"}
 all_exercise_categories = ["arrays", "2D arrays","objects","loops"]
+all_classes_names = ["GUI","PPJ","ABC"]
 
 
 
@@ -101,6 +102,10 @@ elif st.session_state["step"]=="all_records":
             temp_search_checkbox = st.checkbox(cat)
             all_search_checkboxes.append(temp_search_checkbox)
 
+        temp_list_of_classes = ["-"]
+        temp_list_of_classes.extend(all_classes_names)
+        search_class = st.selectbox("Class:",temp_list_of_classes)
+
         search_author = st.text_input("Author:")
 
     list_all_col1, list_all_col2 = st.columns(2)
@@ -164,11 +169,19 @@ elif st.session_state["step"]=="all_records":
     else:
         to_drop_ids_author=[]
 
+    to_drop_ids_class = []
+    if search_class!="-":
+        for key,val in filtered_temp_all_exercises.items():
+            if val["Class"] != search_class:
+                to_drop_ids_class.append(key)
+
+
 
     to_drop_ids_general = []
     to_drop_ids_general.extend(to_drop_ids_cats)
     to_drop_ids_general.extend(to_drop_ids_idnum)
     to_drop_ids_general.extend(to_drop_ids_author)
+    to_drop_ids_general.extend(to_drop_ids_class)
 
     ex_col1, ex_col2,ex_col3 = st.columns(3)
     for key,ex in filtered_temp_all_exercises.items():
@@ -229,13 +242,15 @@ elif st.session_state["step"]=="add_exercise":
 
     st.markdown("<br>",unsafe_allow_html=True)
 
-    add_ex_col1,add_ex_col2 = st.columns(2)
+    add_ex_col1,add_ex_col2, add_ex_col3 = st.columns(3)
 
 
     with add_ex_col1:
         exercise_title = st.text_input("Exercise name:","Generic name")
     with add_ex_col2:
         exercise_author = st.text_input("Author:",st.session_state["logged"][:2])
+    with add_ex_col3:
+        exercise_class = search_class = st.selectbox("Class:",all_classes_names)
 
     exercise_content = st.text_area("Content of exercise goes here")
     exercise_answer = st.text_area("Answer of exercise goes here")
@@ -292,7 +307,8 @@ elif st.session_state["step"]=="add_exercise":
      "Content":exercise_content,
      "Solution":exercise_answer,
      "Author":exercise_author,
-     "Categories":temp_categories
+     "Categories":temp_categories,
+     "Class": exercise_class
                                           }
 
 
@@ -328,16 +344,17 @@ elif st.session_state["step"] =="generate_pack":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    gen_col1,gen_col2 = st.columns(2)
+    gen_col1,gen_col2, gen_col3 = st.columns(3)
     with gen_col1:
         pack_name = st.text_input("Name/Title of the pack","ex. GUI_XII")
     with gen_col2:
-        amount_of_exercises = st.number_input("Number of exercises",step=1,max_value=8)
+        amount_of_exercises = st.number_input("Number of exercises",step=1,max_value=8,min_value=1)
+    with gen_col3:
+        class_of_exercise = st.selectbox("Class:",all_classes_names)
+    if "gen_exercise_checkboxes" not in st.session_state:
 
-    if "add_exercise_checkboxes" not in st.session_state:
-
-        st.session_state["add_exercise_checkboxes"] = []
-        st.session_state["add_exercise_checkboxes_bools"] = []
+        st.session_state["gen_exercise_checkboxes"] = []
+        st.session_state["gen_exercise_checkboxes_bools"] = []
 
     categories_list = st.columns(len(all_exercise_categories))
     for i in range(len(all_exercise_categories)):
@@ -345,9 +362,15 @@ elif st.session_state["step"] =="generate_pack":
             #print(len(st.session_state["add_exercise_checkboxes"]))
 
             def update_checkbox_state(index_bool):
-                st.session_state["add_exercise_checkboxes_bools"][index_bool] = not st.session_state["add_exercise_checkboxes_bools"][index_bool]
+                st.session_state["gen_exercise_checkboxes_bools"][index_bool] = not st.session_state["gen_exercise_checkboxes_bools"][index_bool]
 
             fresh_bool_value = False
+            if "gen_exercise_checkboxes_bools" not in st.session_state:
+                st.session_state["gen_exercise_checkboxes_bools"]=[]
+
+            if "gen_exercise_checkboxes" not in st.session_state:
+                st.session_state["gen_exercise_checkboxes"]=[]
+
             if len(st.session_state["gen_exercise_checkboxes_bools"]) == len(all_exercise_categories):
                 fresh_bool_value=st.session_state["gen_exercise_checkboxes_bools"][i]
 
@@ -359,11 +382,36 @@ elif st.session_state["step"] =="generate_pack":
                 st.session_state["gen_exercise_checkboxes_bools"].append(False)
 
     def generate_pack():
-        temp_generated_exercises = temp_all_exercises
+        temp_generated_exercises = list(temp_all_exercises.values())
+        print(temp_generated_exercises)
         random.shuffle(temp_generated_exercises)
+        #print(temp_generated_exercises)
         selected_categories =[]
-        print(st.session_state["add_exer"])
-        filter(lambda ex: all([sub_x in selected_categories for sub_x in ex["Categories"]]),temp_generated_exercises)
+        #print(st.session_state["add_exer"])
+
+        #Filter by exercise
+        if any(st.session_state["gen_exercise_checkboxes_bools"]):
+            choosen_gen_cats = []
+            for bool,ind in zip(st.session_state["gen_exercise_checkboxes_bools"],list(range(len(all_exercise_categories)))):
+                print(bool)
+                if bool:
+                    choosen_gen_cats.append(all_exercise_categories[ind])
+            print(f"Choosen cats: {choosen_gen_cats}")
+            #temp_generated_exercises = list(filter(lambda ex: all([sub_x in selected_categories for sub_x in ex["Categories"]]),temp_generated_exercises))
+            temp_generated_exercises = [x for x in temp_generated_exercises if all([y in x["Categories"] for y in choosen_gen_cats])]
+        else:
+            print("No question category filter used")
+        print(f"1> {len(temp_generated_exercises)}")
+        #filter by class
+        temp_generated_exercises = [x for x in temp_generated_exercises if x["Class"]==class_of_exercise]
+        print(f"2> {len(temp_generated_exercises)}")
+        #filter by amount
+        temp_generated_exercises = temp_generated_exercises[:amount_of_exercises]
+        print(f"3> {len(temp_generated_exercises)}")
+        if len(temp_generated_exercises)==0:
+            st.error("Because database is limited, there is no enough exercises for this request")
+        else:
+            st.success("Exercises were generated. But for now there is no PDF - you have to trust me")
 
         #todo add filtering
         #todo select a number of exs

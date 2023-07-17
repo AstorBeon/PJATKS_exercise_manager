@@ -7,6 +7,7 @@ temp_all_exercises = {
      "Solution":"This is a solution!",
      "Author":"ML",
      "Categories":["arrays","loops"],
+     "Class":"GUI"
        },
     2:{"ID": 2,
      "Title":"Some ex2 name",
@@ -15,7 +16,8 @@ temp_all_exercises = {
      "Content": "2 - It's a content of this exercise",
      "Solution": "2 - This is a solution!",
      "Author": "ML",
-     "Categories": ["arrays", "objects"]
+     "Categories": ["arrays", "objects"],
+     "Class":"GUI"
      },
     3:{"ID": 3,
      "Title":"Some ex3name",
@@ -24,6 +26,7 @@ temp_all_exercises = {
      "Content": "3 - It's a content of this exercise",
      "Solution": "3 - This is a solution!",
      "Author": "ML",
-     "Categories": ["arrays", "loops"]
+     "Categories": ["arrays", "loops"],
+     "Class":"GUI"
      }
 }
