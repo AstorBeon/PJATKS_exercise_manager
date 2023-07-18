@@ -5,6 +5,7 @@ import uuid
 from Datahub import temp_all_exercises
 from Views import show_exercise
 import streamlit as st
+from fpdf import FPDF
 
 st.set_page_config(page_title=f"Exercise generator",layout="wide")#, page_icon = st.image(image))
 
@@ -334,7 +335,7 @@ elif st.session_state["step"]=="add_exercise":
             #     b = st.button(f"Answer{random.randint(0,100)}")
 
 elif st.session_state["step"] =="generate_pack":
-
+    st.session_state["generate_pack_lock"]=True
     print("gnerate_pack")
     add_col1, add_col2, dum_col = st.columns(3)
     with add_col1:
@@ -382,6 +383,7 @@ elif st.session_state["step"] =="generate_pack":
                 st.session_state["gen_exercise_checkboxes_bools"].append(False)
 
     def generate_pack():
+
         temp_generated_exercises = list(temp_all_exercises.values())
         print(temp_generated_exercises)
         random.shuffle(temp_generated_exercises)
@@ -411,11 +413,31 @@ elif st.session_state["step"] =="generate_pack":
         if len(temp_generated_exercises)==0:
             st.error("Because database is limited, there is no enough exercises for this request")
         else:
-            st.success("Exercises were generated. But for now there is no PDF - you have to trust me")
+            if st.session_state["generate_pack_lock"]:
+                st.session_state["generate_pack_lock"] = False
+            else:
+                st.success("Exercises were generated. But for now there is no PDF - you have to trust me")
 
-        #todo add filtering
-        #todo select a number of exs
+            pdf = FPDF('P', 'mm', 'A4')
+            pdf.add_page()
+            pdf.set_font('Arial', 'B', 25)
+            pdf.cell(190, 10, f'{pack_name}', 0, 1, 'C')
+            pdf.set_font('Arial', 'B', 15)
+            for num in range(len(temp_generated_exercises)):
+                this_ex = temp_generated_exercises[num]
+                pdf.ln(5)
+                pdf.cell(40, 10, f': {this_ex["Title"]}', 0, 1)
+                pdf.set_font('Arial', '', 12)
+                pdf.cell(70, 10, f'Content: {this_ex["Content"]}', 0, 1)
+                #todo add rest of the info
+                #todo make sure formatting is correct
+                #todo add minor visual enhancements
+
+
         #warning if not enough exercises
-        pass
+            return pdf
 
-    st.button("Generate!",key=uuid.uuid4(),on_click=generate_pack,args=[])
+    #st.button("Generate!",key=uuid.uuid4(),on_click=generate_pack,args=[])
+    download_button = st.download_button(f"Download PDF pack",
+                                                 data=generate_pack().output(dest="S").encode("latin-1"),
+                                                 file_name=f"{pack_name}_exercises.pdf")
